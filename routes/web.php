@@ -5,15 +5,30 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    $chat = new Chat();
+//    session()->forget('file');
 
-    $poem = $chat
-        ->systemMessage("You are a poetic assistant, skilled in explaining complex programming concepts with creative flair.")
-        ->send("Compose a poem that compliment my girlfriend that she is incredibly beautiful.");
+    return view('roast');
+});
 
-    $sillyPoem = $chat->reply('Cool, can you make it much, much more sillier?');
 
-    return view('welcome', [
-        'poem' => $sillyPoem
+Route::post('/roast', function () {
+    $attributes = request()->validate([
+        'topic' => ['required', 'string', 'min:2', 'max:50']
+    ]);
+
+    $prompt = "Please roast {$attributes['topic']} in a sarcastic tone.";
+
+    $mp3 = (new Chat())->send(
+        message: $prompt,
+        speech: true
+    );
+
+    $file = "/roasts/" . md5($mp3) . ".mp3";
+
+    file_put_contents(public_path($file), $mp3);
+
+    return redirect('/')->with([
+        'file' => $file,
     ]);
 });
+
