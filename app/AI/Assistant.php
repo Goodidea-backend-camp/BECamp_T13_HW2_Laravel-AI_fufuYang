@@ -9,7 +9,7 @@ class Assistant
 {
     protected array $messages = [];
 
-    private OpenAI\Client $client;
+    public OpenAI\Client $client;
 
     public function __construct(array $messages = [])
     {
