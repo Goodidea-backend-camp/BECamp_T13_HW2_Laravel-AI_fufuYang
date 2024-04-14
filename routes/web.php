@@ -1,6 +1,6 @@
 <?php
 
-use App\AI\Chat;
+use App\AI\Assistant;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 
@@ -18,7 +18,7 @@ Route::post('/roast', function () {
 
     $prompt = "Please roast {$attributes['topic']} in a sarcastic tone.";
 
-    $mp3 = (new Chat())->send(
+    $mp3 = (new Assistant())->send(
         message: $prompt,
         speech: true
     );
@@ -32,3 +32,23 @@ Route::post('/roast', function () {
     ]);
 });
 
+Route::get('/image', function () {
+    return view('image', [
+        'messages' => session('messages', [])
+    ]);
+});
+
+
+Route::post('/image', function () {
+    $attributes = request()->validate([
+        'description' => ['required', 'string', 'min:3']
+    ]);
+
+    $assistant = new App\AI\Assistant(session('messages', []));
+
+   $assistant->visualize($attributes['description']);
+
+    session(['messages' => $assistant->messages()]);
+
+    return redirect('/image');
+});
