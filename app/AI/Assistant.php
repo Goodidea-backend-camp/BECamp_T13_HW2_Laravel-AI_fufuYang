@@ -4,6 +4,7 @@ namespace App\AI;
 
 
 use OpenAI;
+use function Pest\Laravel\delete;
 
 class Assistant
 {
@@ -15,6 +16,11 @@ class Assistant
     {
         $this->client = OpenAI::client(config('services.openai.api_key'));
         $this->messages = $messages;
+    }
+
+    public function hello()
+    {
+        echo "hello world";
     }
 
     public function messages()
