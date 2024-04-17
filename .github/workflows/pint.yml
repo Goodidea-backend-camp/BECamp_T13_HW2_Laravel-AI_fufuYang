@@ -9,7 +9,7 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: "laravel-pint"
-        uses: aglipanci/laravel-pint-action@2.4.0
+        uses: aglipanci/laravel-pint-action@2.4
         with:
           preset: laravel
           verboseMode: true
