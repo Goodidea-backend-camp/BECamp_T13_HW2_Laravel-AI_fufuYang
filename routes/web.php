@@ -118,9 +118,9 @@ Route::get('/assistant', function () {
         'assistant_id' => $assistant->id,
         'thread' => [
             'messages' => [
-                ['role' => 'user', 'content' => 'Who is JYu?']
-            ]
-        ]
+                ['role' => 'user', 'content' => 'Who is JYu?'],
+            ],
+        ],
     ]);
 
     do {
