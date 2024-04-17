@@ -2,9 +2,7 @@
 
 namespace App\AI;
 
-
 use OpenAI;
-use function Pest\Laravel\delete;
 
 class Assistant
 {
@@ -20,7 +18,7 @@ class Assistant
 
     public function hello()
     {
-        echo "hello world";
+        echo 'hello world';
     }
 
     public function messages()
@@ -30,14 +28,14 @@ class Assistant
 
     public function systemMessage(string $message): static
     {
-        $this->addMessage($message, "system");
+        $this->addMessage($message, 'system');
 
         return $this;
     }
 
     public function send(string $message, ?bool $speech): ?string
     {
-        $this->addMessage($message, "assistant");
+        $this->addMessage($message, 'assistant');
 
         $response = $this->client->chat()->create([
             'model' => 'gpt-3.5-turbo',
@@ -45,13 +43,13 @@ class Assistant
         ])->choices[0]->message->content;
 
         if ($response) {
-            $this->addMessage($response, "assistant");
+            $this->addMessage($response, 'assistant');
         }
 
         return $speech ? $this->speech($response) : $response;
     }
 
-    public function speech(string $message) :string
+    public function speech(string $message): string
     {
         return $this->client->audio()->speech([
             'model' => 'tts-1',
@@ -71,12 +69,12 @@ class Assistant
 
         $options = array_merge([
             'prompt' => $description,
-            'model' => 'dall-e-3'
+            'model' => 'dall-e-3',
         ], $options);
 
         $url = $this->client->images()->create($options)->data[0]->url;
 
-        $this->addMessage($url, "assistant");
+        $this->addMessage($url, 'assistant');
 
         return $url;
     }
@@ -90,8 +88,9 @@ class Assistant
     {
         $this->messages[] = [
             'role' => $role,
-            'content' => $message
+            'content' => $message,
         ];
+
         return $this;
     }
 }

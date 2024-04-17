@@ -4,7 +4,10 @@ namespace App\Console\Commands;
 
 use App\AI\Assistant;
 use Illuminate\Console\Command;
-use function Laravel\Prompts\{text, info, spin};
+
+use function Laravel\Prompts\info;
+use function Laravel\Prompts\spin;
+use function Laravel\Prompts\text;
 
 class ChatCommand extends Command
 {
@@ -29,7 +32,7 @@ class ChatCommand extends Command
     {
         $chat = new Assistant();
 
-        if ($this->option('system')){
+        if ($this->option('system')) {
             $chat->systemMessage($this->option('system'));
         }
 
@@ -38,12 +41,12 @@ class ChatCommand extends Command
             required: true
         );
 
-        $response = spin(fn() => $chat->send($question), 'Sending Request...');
+        $response = spin(fn () => $chat->send($question), 'Sending Request...');
 
         $this->info($response);
 
-        while($question = text('Do you want to respond?')){
-            $response = spin(fn() => $chat->send($question), 'Sending Request...');
+        while ($question = text('Do you want to respond?')) {
+            $response = spin(fn () => $chat->send($question), 'Sending Request...');
 
             info($response);
         }
