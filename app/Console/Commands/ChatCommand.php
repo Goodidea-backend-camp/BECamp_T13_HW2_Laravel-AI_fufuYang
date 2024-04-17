@@ -41,12 +41,12 @@ class ChatCommand extends Command
             required: true
         );
 
-        $response = spin(fn () => $chat->send($question), 'Sending Request...');
+        $response = spin(fn () => $chat->send($question, false), 'Sending Request...');
 
         $this->info($response);
 
         while ($question = text('Do you want to respond?')) {
-            $response = spin(fn () => $chat->send($question), 'Sending Request...');
+            $response = spin(fn () => $chat->send($question, false), 'Sending Request...');
 
             info($response);
         }
