@@ -13,6 +13,7 @@
         "openai-php/client": "^0.8.4"
     },
     "require-dev": {
+        "driftingly/rector-laravel": "^1.1",
         "fakerphp/faker": "^1.23",
         "laravel/pint": "^1.15",
         "laravel/sail": "^1.29",
