@@ -37,7 +37,7 @@ class ChatCommand extends Command
         }
 
         $question = text(
-            label: "What is your question for AI?",
+            label: 'What is your question for AI?',
             required: true
         );
 
