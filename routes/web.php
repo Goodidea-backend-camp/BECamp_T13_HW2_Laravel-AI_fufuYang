@@ -14,7 +14,7 @@ Route::post('/roast', function () {
         'topic' => ['required', 'string', 'min:2', 'max:50'],
     ]);
 
-    $prompt = "Please roast {$attributes['topic']} in a sarcastic tone.";
+    $prompt = sprintf('Please roast %s in a sarcastic tone.', $attributes['topic']);
 
     $mp3 = (new Assistant())->send(
         message: $prompt,
@@ -54,7 +54,7 @@ Route::get('/replies', function () {
     return view('create-reply');
 });
 
-Route::post('/replies', function () {
+Route::post('/replies', function (): string {
     request()->validate([
         'body' => [
             'required',
@@ -71,7 +71,7 @@ Route::post('/replies', function () {
                             'content' => <<<EOT
                     Please inspect the following text and determine if it is spam.
 
-                    { $value }
+                    { {$value} }
                     
                     Expected Response Example:
 

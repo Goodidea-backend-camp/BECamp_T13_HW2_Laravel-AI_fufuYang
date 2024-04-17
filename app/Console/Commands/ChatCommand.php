@@ -28,12 +28,12 @@ class ChatCommand extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): void
     {
-        $chat = new Assistant();
+        $assistant = new Assistant();
 
         if ($this->option('system')) {
-            $chat->systemMessage($this->option('system'));
+            $assistant->systemMessage($this->option('system'));
         }
 
         $question = text(
@@ -41,12 +41,12 @@ class ChatCommand extends Command
             required: true
         );
 
-        $response = spin(fn () => $chat->send($question, false), 'Sending Request...');
+        $response = spin(fn (): ?string => $assistant->send($question, false), 'Sending Request...');
 
         $this->info($response);
 
         while ($question = text('Do you want to respond?')) {
-            $response = spin(fn () => $chat->send($question, false), 'Sending Request...');
+            $response = spin(fn (): ?string => $assistant->send($question, false), 'Sending Request...');
 
             info($response);
         }

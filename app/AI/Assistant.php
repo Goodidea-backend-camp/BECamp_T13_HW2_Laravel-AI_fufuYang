@@ -6,22 +6,19 @@ use OpenAI;
 
 class Assistant
 {
-    protected array $messages = [];
-
     public OpenAI\Client $client;
 
-    public function __construct(array $messages = [])
+    public function __construct(protected array $messages = [])
     {
         $this->client = OpenAI::client(config('services.openai.api_key'));
-        $this->messages = $messages;
     }
 
-    public function hello()
+    public function hello(): void
     {
         echo 'hello world';
     }
 
-    public function messages()
+    public function messages(): array
     {
         return $this->messages;
     }
@@ -46,7 +43,7 @@ class Assistant
             $this->addMessage($response, 'assistant');
         }
 
-        return $speech ? $this->speech($response) : $response;
+        return $speech === true ? $this->speech($response) : $response;
     }
 
     public function speech(string $message): string
