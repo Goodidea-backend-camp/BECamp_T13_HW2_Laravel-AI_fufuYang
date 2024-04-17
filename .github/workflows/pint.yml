@@ -13,4 +13,3 @@ jobs:
           testMode: true
           configPath: "./pint.json"
           pintVersion: 1.8.0
-          onlyDirty: true
