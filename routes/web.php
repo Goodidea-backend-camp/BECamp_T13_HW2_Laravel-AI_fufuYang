@@ -93,3 +93,47 @@ Route::post('/replies', function () {
 
     return 'Post is valid.';
 });
+
+Route::get('/assistant', function () {
+    $assistantObject = new Assistant();
+
+    $file = $assistantObject->client->files()->upload([
+        'purpose' => 'assistants',
+        'file' => fopen(storage_path('docs/jyu.md'), 'rb'),
+    ]);
+
+    $assistant = $assistantObject->client->assistants()->create([
+        'model' => 'gpt-4-1106-preview',
+        'name' => 'Jyu Assistant',
+        'instructions' => 'You are a Jyu assistant. Please provide your feedback on the following prompt.',
+        'tools' => [
+            ['type' => 'retrieval'],
+        ],
+        'file_ids' => [
+            $file->id,
+        ],
+    ]);
+
+    $run = $assistantObject->client->threads()->createAndRun([
+        'assistant_id' => $assistant->id,
+        'thread' => [
+            'messages' => [
+                ['role' => 'user', 'content' => 'Who is JYu?']
+            ]
+        ]
+    ]);
+
+    do {
+        sleep(1); // polling for the run status
+
+        $run = $assistantObject->client->threads()->runs()->retrieve(
+            threadId: $run->threadId,
+            runId: $run->id
+        );
+    } while ($run->status !== 'completed');
+
+    // Fetch the messages from the run
+    $messages = $assistantObject->client->threads()->messages()->list($run->threadId);
+
+    dd($messages);
+});
