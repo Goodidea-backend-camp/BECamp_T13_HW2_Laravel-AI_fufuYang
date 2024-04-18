@@ -33,6 +33,7 @@ return [
 
     'openai' => [
         'api_key' => env('OPENAI_API_KEY'),
+        'assistant_id' => env('LARAPARSE_ASSISTANT_ID'),
     ],
 
 ];

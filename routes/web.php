@@ -94,46 +94,16 @@ Route::post('/replies', function (): string {
     return 'Post is valid.';
 });
 
-Route::get('/assistant', function () {
-    $assistantObject = new Assistant();
+/**
+ * @note 這個 Route 還在測試階段，請不要使用或更動
+ */
+Route::get('/assistant', function (): never {
+    $assistant = new \App\AI\LaraparseAssistant(config('services.openai.assistant_id'));
 
-    $file = $assistantObject->client->files()->upload([
-        'purpose' => 'assistants',
-        'file' => fopen(storage_path('docs/jyu.md'), 'rb'),
-    ]);
-
-    $assistant = $assistantObject->client->assistants()->create([
-        'model' => 'gpt-4-1106-preview',
-        'name' => 'Jyu Assistant',
-        'instructions' => 'You are a Jyu assistant. Please provide your feedback on the following prompt.',
-        'tools' => [
-            ['type' => 'retrieval'],
-        ],
-        'file_ids' => [
-            $file->id,
-        ],
-    ]);
-
-    $run = $assistantObject->client->threads()->createAndRun([
-        'assistant_id' => $assistant->id,
-        'thread' => [
-            'messages' => [
-                ['role' => 'user', 'content' => 'Who is JYu?'],
-            ],
-        ],
-    ]);
-
-    do {
-        sleep(1); // polling for the run status
-
-        $run = $assistantObject->client->threads()->runs()->retrieve(
-            threadId: $run->threadId,
-            runId: $run->id
-        );
-    } while ($run->status !== 'completed');
-
-    // Fetch the messages from the run
-    $messages = $assistantObject->client->threads()->messages()->list($run->threadId);
+    $messages = $assistant->createThread()
+        ->write('Hello.')
+        ->write('Do you know who is JYu?')
+        ->send();
 
     dd($messages);
 });
