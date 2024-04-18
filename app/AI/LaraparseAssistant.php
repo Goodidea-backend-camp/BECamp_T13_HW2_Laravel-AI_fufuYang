@@ -14,8 +14,14 @@ class LaraparseAssistant
 {
     public Client $client;
 
+    /**
+     * The OpenAI AssistantResponse instance.
+     */
     protected OpenAI\Responses\Assistants\AssistantResponse $assistant;
 
+    /**
+     * The id of the current thread.
+     */
     protected string $threadId;
 
     public function __construct(string $assistantId)
@@ -24,6 +30,9 @@ class LaraparseAssistant
         $this->assistant = $this->client->assistants()->retrieve($assistantId);
     }
 
+    /**
+     * Create a new OpenAI Assistant.
+     */
     public function create(array $config): static
     {
         $assistantResponse = $this->client->assistants()->create(array_merge_recursive([
@@ -38,7 +47,10 @@ class LaraparseAssistant
         return new static($assistantResponse->id);
     }
 
-    // TODO: $file should be array
+    /**
+     * Provide reading material to the assistant.
+     * TODO: `$file` should be an array.
+     */
     public function educate(string $file): static
     {
         $file = $this->client->files()->upload([
@@ -54,6 +66,9 @@ class LaraparseAssistant
         return $this;
     }
 
+    /**
+     * Create a new thread.
+     */
     public function createThread(array $parameters = []): static
     {
         $threadResponse = $this->client->threads()->create($parameters);
@@ -63,12 +78,18 @@ class LaraparseAssistant
         return $this;
     }
 
+    /**
+     * Fetch all messages for the current thread.
+     */
     public function messages(): OpenAI\Responses\Threads\Messages\ThreadMessageListResponse
     {
         // Fetch the messages from the run
         return $this->client->threads()->messages()->list($this->threadId);
     }
 
+    /**
+     * Write a new message.
+     */
     public function write(string $message): static
     {
         $this->client->threads()->messages()->create(
@@ -79,6 +100,9 @@ class LaraparseAssistant
         return $this;
     }
 
+    /**
+     * Send all new messages to the assistant, and await a response.
+     */
     public function send(): OpenAI\Responses\Threads\Messages\ThreadMessageListResponse
     {
         $run = $this->client->threads()->runs()->create(
