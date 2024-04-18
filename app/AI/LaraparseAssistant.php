@@ -4,6 +4,7 @@ namespace App\AI;
 
 use OpenAI;
 use OpenAI\Client;
+use OpenAI\Responses\Threads\Runs\ThreadRunResponse;
 
 /**
  * @note 這個 Class 還在測試階段，請不要使用或更動
@@ -37,8 +38,8 @@ class LaraparseAssistant
     {
         $assistantResponse = $this->client->assistants()->create(array_merge_recursive([
             'model' => 'gpt-4-1106-preview',
-            'name' => 'Jyu Assistant',
-            'instructions' => 'You are a Jyu assistant. Please provide your feedback on the following prompt.',
+            'name' => 'Test Assistant',
+            'instructions' => 'You are an AI assistant. Please provide your feedback on the following prompt.',
             'tools' => [
                 ['type' => 'retrieval'],
             ],
@@ -105,20 +106,28 @@ class LaraparseAssistant
      */
     public function send(): OpenAI\Responses\Threads\Messages\ThreadMessageListResponse
     {
-        $run = $this->client->threads()->runs()->create(
+        $threadRunResponse = $this->client->threads()->runs()->create(
             $this->threadId,
             ['assistant_id' => $this->assistant->id]
         );
 
-        do {
-            sleep(1); // polling for the run status
-
-            $run = $this->client->threads()->runs()->retrieve(
-                threadId: $run->threadId,
-                runId: $run->id
-            );
-        } while ($run->status !== 'completed');
+        while ($this->working($threadRunResponse)) {
+            // wait for the run to complete
+            sleep(1);
+        }
 
         return $this->messages();
+    }
+
+    protected function working(ThreadRunResponse $threadRunResponse): bool
+    {
+        sleep(1); // polling for the run status
+
+        $threadRunResponse = $this->client->threads()->runs()->retrieve(
+            threadId: $threadRunResponse->threadId,
+            runId: $threadRunResponse->id
+        );
+
+        return $threadRunResponse->status !== 'completed';
     }
 }
