@@ -8,10 +8,7 @@
 
 1. 若未下載 Docker Desktop 或是 [OrbStack](https://orbstack.dev/)（建議）者，需先下載。
 
-2. 先確認有沒有任何程序佔用 80 port（或是 Docker 要使用的 port 號），若有，需先停止。若需停止 Apache ，請執行以下 command ：
-```
-sudo apachectl -k stop
-```
+2. 先確認有沒有任何程序佔用 80 port（或是 Docker 要使用的 port 號），若有，需先停止。
 
 3. 將 fork 的專案 clone 至本地，請執行以下 command：
 ( `Path` 為欲放專案的本地路徑， `Username` 為個人 GitHub 帳號， `Your Name` 為專案名稱後綴，請自行替換)
