@@ -4,7 +4,7 @@
 
 ## Prerequisites
 
-## Installation
+## Installation (Author: [Helen](https://github.com/lovepp0518))
 
 1. 若未下載 Docker Desktop 或是 [OrbStack](https://orbstack.dev/)（建議）者，需先下載。
 
@@ -19,9 +19,9 @@ cd {Path}
 git clone https://github.com/{Username}/BECamp_T13_HW2_Laravel-AI_{Your Name}
 ```
 
-4.將專案中的 .env.example 複製一份在專案中，並將檔名改為 .env ，完成後儲存。
+4. 將專案中的 .env.example 複製一份在專案中，並將檔名改為 .env ，完成後儲存。
 
-5.請執行以下 command ，安裝專案所需相關套件並啟動開發環境：
+5. 請執行以下 command ，安裝專案所需相關套件並啟動開發環境：
 ```
 composer install
 ```
