@@ -17,6 +17,15 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->text('introduction')->nullable(); // 自我介紹
+            $table->string('profile_image_url')->nullable(); // 大頭照路徑
+            $table->string('verification_token')->nullable(); // 驗證信 token
+            $table->boolean('is_verified')->default(false); // 是否完成驗證
+            $table->unsignedTinyInteger('subscription_type')->default(1); // 會員制度 (1=free, 2=pro)
+            $table->string('provider')->nullable(); // 第三方登入服務名稱
+            $table->string('provider_id')->nullable(); // 第三方唯一用戶 ID
+            $table->string('oauth_token')->nullable(); // 第三方的 OAuth token
+            $table->timestamp('oauth_expires_at')->nullable(); // 第三方的 OAuth token 過期時間
             $table->rememberToken();
             $table->timestamps();
         });
