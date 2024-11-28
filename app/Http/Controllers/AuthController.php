@@ -165,4 +165,68 @@ class AuthController extends Controller
         // 重定向到其他頁面
         return redirect()->route('theards.index');
     }
+
+    // =================================
+    // 會員登入
+    public function login()
+    {
+        return view("auth.login");
+    }
+
+    public function loginPost(Request $request)
+    {
+        // 登入驗證
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required|string',
+        ]);
+        $credentials = $request->only('email', 'password');
+
+        // 登入失敗
+        if (!Auth::attempt($credentials)) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => '帳號或密碼錯誤，請重新輸入。'
+                ], Response::HTTP_BAD_REQUEST);
+            }
+            return redirect(route('login'))->with([
+                'error' => '登入失敗，請重新輸入。'
+            ]);
+        }
+
+        // 登入
+        $user = User::firstWhere('email', $request->email);
+
+        // 檢查使用者是否已完成電子郵件驗證
+        if (!$user->is_verified) {
+            // 若未驗證，提示用戶完成驗證後再登入
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => '請完成電子郵件驗證後再登入。',
+                ], Response::HTTP_FORBIDDEN);
+            }
+
+            return redirect(route('login'))->with([
+                'error' => '請完成電子郵件驗證後再登入。',
+            ]);
+        }
+
+        // 產生 API token
+        $token = $user->createToken(
+            'API token for ' . $user->name,
+            ['*'],
+            now()->addMonth() // 一個月後過期
+        )->plainTextToken;
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'status' => 'success',
+                'access_token' => $token,
+                'message' => '成功登入',
+            ], Response::HTTP_OK);
+        }
+        return redirect()->intended(route('theards.index'));
+    }
 }
