@@ -115,7 +115,7 @@ class AuthController extends Controller
     }
 
     // [登出]==============================================
-    public function logout(Request $request): RedirectResponse
+    public function logout(Request $request): Response
     {
         // 呼叫 AuthService 來處理登出邏輯
         $this->authService->logout($request);
@@ -138,7 +138,7 @@ class AuthController extends Controller
     }
 
     // [更新會員資料]==============================================
-    public function update(Request $request): RedirectResponse|view
+    public function update(Request $request): Response|View|JsonResponse
     {
         $request->validate([
             'name' => 'required|string|max:255',
