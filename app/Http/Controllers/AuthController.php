@@ -2,161 +2,167 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\RegisterRequest;
-use App\Http\Requests\LoginRequest;
-use App\Http\Resources\UserResource;
-use App\Services\AuthService;
-use App\Traits\ApiResponses;
-use Illuminate\Contracts\View\View;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use App\Models\User;
+use App\Enums\Provider;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
+use App\Mail\VerificationEmail;
+use Illuminate\Support\Facades\Mail;
+use App\AI\Assistant;
+use Illuminate\Support\Facades\Session;
+use Laravel\Socialite\Facades\Socialite;
+
 
 class AuthController extends Controller
 {
-    use ApiResponses;
 
-    protected $authService;
-
-    public function __construct(AuthService $authService)
+    // 會員註冊
+    public function register()
     {
-        $this->authService = $authService;
+        return view("auth.register");
     }
 
-    // [註冊]==============================================
-    public function register(): View
-    {
-        return view('auth.register');
-    }
-
-    public function registerPost(RegisterRequest $request)
+    public function registerPost(Request $request)
     {
         // 註冊驗證
-        $result = $this->authService->register($request->validated());
+        $request->validate([
+            'name' => 'required|string',
+            'email' => 'required|email',
+            'password' => 'required|string',
+            'introduction' => 'required|string',
+        ]);
 
-        // 如果註冊返回錯誤
-        if (isset($request['email_error']) || isset($result['name_error'])) {
-            if ($request->expectsJson()) {
-                // 若是 JSON 請求，回傳錯誤訊息
-                return $this->error($result['name_error'] ?? $result['email_error'], $result['status'] ?? Response::HTTP_UNPROCESSABLE_ENTITY);
+        // 檢查電子郵件是否已存在
+        $existingUser = User::where('email', $request->email)->first();  // 檢查是否有相同email的用戶
+        //$existingPassword = User::where('password', $request->password)->exists()
+        if ($existingUser) {
+            // 檢查是否為第三方登入的用戶，密碼是否存在，若無密碼則為第三方登入
+            if ($existingUser->provider !== Provider::LOCAL) {
+                // 如果存在第三方登入的用戶，則不能用相同的email進行本地註冊
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => '請直接使用 google 登入。',
+                    ], Response::HTTP_CONFLICT);
+                }
+
+                return redirect()->route('register')->withErrors([
+                    'email' => '請直接使用 google 登入。',
+                ]);
             }
 
-            // 若是表單請求，重定向並顯示錯誤訊息
+
+            // 檢查請求是否為 AJAX
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => '電子郵件已被使用，請選擇其他電子郵件地址'
+                ], Response::HTTP_CONFLICT);
+            }
+
+            // 返回到登入頁面，顯示錯誤訊息
             return redirect()->route('register')->withErrors([
-                'email' => $result['email_error'] ?? null, // 根據不同的錯誤訊息，填寫錯誤訊息
-                'name' => $result['name_error'] ?? null,
+                'email' => '電子郵件已被使用，請選擇其他電子郵件地址。'
             ]);
         }
 
-        // 註冊成功，回傳成功訊息
-        if ($request->expectsJson()) {
-            return $this->success(null, '註冊成功，請檢查您的電子郵件以驗證帳戶。');
-        }
+        // 檢查使用者名稱是否違反善良風俗
+        $assistant = new Assistant();
+        $nameCheck = $assistant->checkNameValidity($request->name); // 檢查名稱
 
-        // 若是表單請求，重定向回註冊頁面，並顯示成功訊息
-        return redirect()->route('login')->with('status', '註冊成功，請檢查您的電子郵件以驗證帳戶。');
-    }
-
-    // [Google登入]==============================================
-    public function googleRedirect(): RedirectResponse
-    {
-        return $this->authService->handleGoogleLogin();
-    }
-
-    public function googleCallback(Request $request): RedirectResponse|UserResource
-    {
-        // 直接處理 Google Callback，並傳回處理後的使用者資料
-        $user = $this->authService->handleGoogleCallback();
-        if ($request->expectsJson()) {
-            return new UserResource($user);
-        }
-        return redirect()->intended(route('theards.index'));
-    }
-
-    public function login()
-    {
-        return view("auth.login");
-    }
-
-    // [登入]==============================================
-    public function loginPost(LoginRequest $request)
-    {
-        $credentials = $request->only('email', 'password');
-
-        // 呼叫 AuthService 來處理登入邏輯
-        $response = $this->authService->login($credentials);
-
-        // 如果是錯誤回應（未驗證或其他錯誤）
-        if ($response['status'] == 'error') {
+        if (!$nameCheck['is_valid']) {
+            // 如果名稱不合法，返回錯誤響應
             if ($request->expectsJson()) {
                 return response()->json([
-                    'status' => $response['status'],
-                    'message' => $response['message'],
-                    'code' => $response['code']
+                    'status' => 'error',
+                    'message' => '驗證失敗。',
+                    'errors' => [
+                        'name' => '使用者名稱違反公共道德，請更改。',
+                    ],
+                ], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+
+            return redirect()->route('register')->withErrors([
+                'name' => '使用者名稱不符合道德規範，請使用其他名稱。'
+            ]);
+        }
+
+        // 存入註冊資訊
+        $user = new User();
+        $user->name = $request['name'];
+        $user->email = $request['email'];
+        $user->verification_token = Str::random(32); // 生成驗證信的token
+        $user->password = $request['password'];
+        $user->introduction = $request['introduction'];
+        $user->profile_image_url = 'pending';
+
+
+
+        // 根據是否提供密碼來判斷 provider 來源
+        $user->provider = $request->filled('password') ? Provider::LOCAL : Provider::GOOGLE;
+
+
+        // 生成大頭照並轉換為 Base64
+        $profileImageUrl = $assistant->visualize($request['introduction'], [
+            'response_format' => 'url', // 可選擇 'url' 或 'base64'
+        ]);
+        $user->profile_image_url = $profileImageUrl;
+
+
+        // 保存註冊資訊
+        if ($user->save()) {
+            // 發送驗證郵件
+            Mail::to($user->email)->send(new VerificationEmail($user));
+            // 判斷請求是否來自 AJAX
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'status' => 'success',
+                    'message' => '註冊成功，請檢查您的電子郵件以驗證帳戶。',
                 ]);
             }
-            session()->flash('error', $response['message']);
-            return redirect(route('login'));
+            return redirect(route('login'))->with('success', '註冊成功，請檢查您的電子郵件以驗證帳戶。');
+        }
+    }
+    // Google 登入 
+    public function googleRedirect()
+    {
+        return Socialite::driver('google')->redirect();
+    }
+    // Google 登入
+    public function googleCallback(Request $request)
+    {
+        // 獲取 Google 用戶資料
+        $googleUser = Socialite::driver('google')->user();
+
+
+        // 檢查是否已經有相同 email 的用戶
+        $user = User::where('email', $googleUser->email)->first();  // 或使用 exists()
+
+        if ($user) {
+            // 如果用戶已經存在，更新其資料
+            $user->provider_id = $googleUser->id;
+            $user->name = $googleUser->name;
+            // 保存更新後的資料
+            $user->save();
+        } else {
+            // 如果用戶不存在，創建新用戶
+            $user = new User();
+            $user->provider_id = $googleUser->id;
+            $user->name = $googleUser->name;
+            $user->email = $googleUser->email;  // 這裡設定 email  
+            // 根據是否提供密碼來判斷 provider 來源
+            $user->provider = $request->filled('password') ? Provider::LOCAL : Provider::GOOGLE;
+
+            // 保存新用戶
+            $user->save();
         }
 
-        // 如果是成功登入，返回 API token
-        if ($request->expectsJson()) {
-            return response()->json([
-                'status' => $response['status'],
-                'access_token' => $response['access_token'],
-                'message' => $response['message'],
-            ], $response['code']);
-        }
+        // 使用 Auth 登入
+        Auth::login($user);
 
-        // 登入成功後，重定向到其他頁面
+        // 重定向到其他頁面
         return redirect()->route('theards.index');
-    }
-
-    // [登出]==============================================
-    public function logout(Request $request): Response
-    {
-        // 呼叫 AuthService 來處理登出邏輯
-        $this->authService->logout($request);
-
-        // 判斷請求類型並返回響應
-        if ($request->expectsJson()) {
-            // 如果是 JSON 請求，返回空的 JSON 響應
-            return response()->json(null, Response::HTTP_NO_CONTENT);
-        }
-
-        // 否則，重定向到登入頁面
-        return redirect(route('login'));
-    }
-
-    // [會員編輯]==============================================
-    public function edit(): View
-    {
-        $user = Auth::user();
-        return view('auth.edit', compact('user'));
-    }
-
-    // [更新會員資料]==============================================
-    public function update(Request $request): Response|View|JsonResponse
-    {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'introduction' => 'nullable|string|max:255',
-        ]);
-
-        // 確保使用者已登錄
-        $user = Auth::user();
-
-        if (!$user) {
-            return response()->json(['message' => 'Unauthenticated.'], 401);
-        }
-
-        // 呼叫 AuthService 更新用戶資料
-        $updatedUser = $this->authService->updateUser($user, $request);
-        if ($request->expectsJson()) {
-            return $this->success(new UserResource($updatedUser), '資料更新成功');
-        }
-        return view('auth.edit', compact('user'));
     }
 }
