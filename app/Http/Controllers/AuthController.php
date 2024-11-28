@@ -229,4 +229,43 @@ class AuthController extends Controller
         }
         return redirect()->intended(route('theards.index'));
     }
+    // 會員編輯
+    public function edit(Request $request)
+    {
+        // 取得當前登入的使用者
+        $user = Auth::user();
+
+        // 顯示會員編輯頁面，並傳遞使用者資料
+        return view('auth.edit', compact('user'));
+    }
+
+
+    // 會員資料更新
+    public function update(Request $request)
+    {
+        // 驗證資料，僅允許更新 name 和 introduction
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'introduction' => 'nullable|string',
+        ]);
+
+        // 取得當前登入的使用者
+        $user = Auth::user();
+
+        // 更新 name 和 introduction
+
+        $user->name = $request->input('name');
+        $user->introduction = $request->input('introduction');
+        $user->save();
+
+        // 回傳更新成功的訊息
+        if ($request->expectsJson()) {
+            return response()->json([
+                'status' => 'success',
+                'message' => '會員資料更新成功',
+            ], Response::HTTP_OK);
+        }
+
+        return redirect()->route('profile.edit')->with('success', '會員資料更新成功');
+    }
 }
