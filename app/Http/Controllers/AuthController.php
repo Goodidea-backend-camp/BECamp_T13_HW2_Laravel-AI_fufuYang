@@ -268,4 +268,29 @@ class AuthController extends Controller
 
         return redirect()->route('profile.edit')->with('success', '會員資料更新成功');
     }
+    // =================================
+    // 會員登出
+
+    public function logout(Request $request)
+    {
+        // 清除 Sanctum 的 token
+        $request->user()->tokens->each(function ($token) {
+            $token->delete();
+        });
+
+        // 清除 session 資料
+        Session::flush();
+
+        // 使用 Web guard 登出
+        Auth::guard('web')->logout();
+
+        // 判斷請求類型並返回響應
+        if ($request->expectsJson()) {
+            // 如果是 JSON 請求，返回空的 JSON 響應
+            return response()->json(null, Response::HTTP_NO_CONTENT);
+        }
+
+        // 否則，重定向到登入頁面
+        return redirect(route('login'));
+    }
 }
