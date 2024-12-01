@@ -8,6 +8,7 @@ class Assistant
 {
     public OpenAI\Client $client;
 
+
     public function __construct(protected array $messages = [])
     {
         $this->client = OpenAI::client(config('services.openai.api_key'));
@@ -69,11 +70,16 @@ class Assistant
             'model' => 'dall-e-3',
         ], $options);
 
-        $url = $this->client->images()->create($options)->data[0]->url;
+        try {
+            $url = $this->client->images()->create($options)->data[0]->url;
 
-        $this->addMessage($url, 'assistant');
+            $this->addMessage($url, 'assistant');
 
-        return $url;
+            return $url;
+        } catch (\Exception $e) {
+            // 捕獲並處理錯誤
+            return ['error' => '圖片生成失敗，請稍後再試'];
+        }
     }
 
     public function reply(string $message): ?string
@@ -81,7 +87,7 @@ class Assistant
         return $this->send($message, false);
     }
 
-    protected function addMessage(string $message, string $role = 'user'): static
+    public function addMessage(string $message, string $role = 'user'): static
     {
         $this->messages[] = [
             'role' => $role,
@@ -89,5 +95,19 @@ class Assistant
         ];
 
         return $this;
+    }
+
+    public function checkNameValidity(string $name): array
+    {
+        // 使用 OpenAI 的內容審核 API，檢查提供的名稱是否合法
+        $response = $this->client->moderations()->create([
+            'model' => 'omni-moderation-latest', // 使用的模型
+            'input' => $name, // 檢查的名稱
+        ]);
+        // 返回檢查結果，包括名稱是否有效和詳細信息
+        return [
+            'is_valid' => $response->results[0]->flagged === false, // 如果 flagged 為 false，表示名稱是有效的
+            'details' => $response->results[0]->categories, // 返回標籤類別，用於進一步分析
+        ];
     }
 }
