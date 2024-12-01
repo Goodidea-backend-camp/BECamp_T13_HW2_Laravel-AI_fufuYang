@@ -13,6 +13,7 @@ use App\Services\AuthService;
 use App\Traits\ApiResponses;
 use Illuminate\Contracts\View\View;
 use App\Http\Requests\RegisterRequest;
+use Illuminate\Http\RedirectResponse;
 
 class AuthController extends Controller
 {
@@ -60,45 +61,25 @@ class AuthController extends Controller
     }
 
 
-    // Google 登入 
-    public function googleRedirect()
+    // [Google登入]==============================================
+    public function googleRedirect(): RedirectResponse
     {
-        return Socialite::driver('google')->redirect();
+        return $this->authService->handleGoogleLogin();
     }
-    // Google 登入
-    public function googleCallback(Request $request)
+
+    public function googleCallback(Request $request): RedirectResponse|UserResource
     {
-        // 獲取 Google 用戶資料
-        $googleUser = Socialite::driver('google')->user();
-
-
-        // 檢查是否已經有相同 email 的用戶
-        $user = User::where('email', $googleUser->email)->first();  // 或使用 exists()
-
-        if ($user) {
-            // 如果用戶已經存在，更新其資料
-            $user->provider_id = $googleUser->id;
-            $user->name = $googleUser->name;
-            // 保存更新後的資料
-            $user->save();
-        } else {
-            // 如果用戶不存在，創建新用戶
-            $user = new User();
-            $user->provider_id = $googleUser->id;
-            $user->name = $googleUser->name;
-            $user->email = $googleUser->email;  // 這裡設定 email  
-            // 根據是否提供密碼來判斷 provider 來源
-            $user->provider = $request->filled('password') ? Provider::LOCAL : Provider::GOOGLE;
-
-            // 保存新用戶
-            $user->save();
+        // 直接處理 Google Callback，並傳回處理後的使用者資料
+        $user = $this->authService->handleGoogleCallback();
+        if ($request->expectsJson()) {
+            return new UserResource($user);
         }
+        return redirect()->intended(route('theards.index'));
+    }
 
-        // 使用 Auth 登入
-        Auth::login($user);
-
-        // 重定向到其他頁面
-        return redirect()->route('theards.index');
+    public function login()
+    {
+        return view("auth.login");
     }
 
     // =================================

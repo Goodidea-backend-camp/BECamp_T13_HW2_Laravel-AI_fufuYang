@@ -67,4 +67,42 @@ class AuthService
 
         return $user;
     }
+    // Google 登入邏輯
+    public function handleGoogleLogin()
+    {
+        return Socialite::driver('google')->redirect();
+    }
+
+    public function handleGoogleCallback()
+    {
+        // 獲取 Google 用戶資料
+        $googleUser = Socialite::driver('google')->user();
+
+        // 嘗試查找已經存在的用戶
+        $user = User::where('email', $googleUser->email)->first();
+
+        if ($user) {
+            // 如果用戶已經存在，更新其資料
+            $user->provider_id = $googleUser->id;
+            $user->name = $googleUser->name;
+            // 更新 Google 提供的資料
+            $user->save();
+        } else {
+            // 如果用戶不存在，創建新用戶
+            $user = new User();
+            $user->provider_id = $googleUser->id;
+            $user->name = $googleUser->name;
+            $user->email = $googleUser->email;
+            // 設定 provider 為 Google 登入
+            $user->provider = Provider::GOOGLE;
+
+            // 保存新用戶
+            $user->save();
+        }
+
+        // 使用 Auth 登入
+        Auth::login($user);
+
+        return $user;
+    }
 }
