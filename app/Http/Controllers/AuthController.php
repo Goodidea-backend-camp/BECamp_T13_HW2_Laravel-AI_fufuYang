@@ -120,7 +120,12 @@ class AuthController extends Controller
         return redirect()->route('theards.index');
     }
 
-
+    // [會員編輯]==============================================
+    public function edit(): View
+    {
+        $user = Auth::user();
+        return view('auth.edit', compact('user'));
+    }
     // [更新會員資料]==============================================
     public function update(Request $request): Response|View|JsonResponse
     {
@@ -143,21 +148,11 @@ class AuthController extends Controller
         }
         return view('auth.edit', compact('user'));
     }
-    // =================================
-    // 會員登出
-
-    public function logout(Request $request)
+    // [登出]==============================================
+    public function logout(Request $request): Response
     {
-        // 清除 Sanctum 的 token
-        $request->user()->tokens->each(function ($token) {
-            $token->delete();
-        });
-
-        // 清除 session 資料
-        Session::flush();
-
-        // 使用 Web guard 登出
-        Auth::guard('web')->logout();
+        // 呼叫 AuthService 來處理登出邏輯
+        $this->authService->logout($request);
 
         // 判斷請求類型並返回響應
         if ($request->expectsJson()) {

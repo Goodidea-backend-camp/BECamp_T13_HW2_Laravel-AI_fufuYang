@@ -179,4 +179,18 @@ class AuthService
 
         return $user;
     }
+    // 會員登出邏輯
+    public function logout(Request $request)
+    {
+        // 清除 Sanctum 的 token
+        $request->user()->tokens->each(function ($token) {
+            $token->delete();
+        });
+
+        // 清除 session 資料
+        Session::flush();
+
+        // 使用 Web guard 登出
+        Auth::guard('web')->logout();
+    }
 }
