@@ -14,6 +14,7 @@ use App\Traits\ApiResponses;
 use Illuminate\Contracts\View\View;
 use App\Http\Requests\RegisterRequest;
 use Illuminate\Http\RedirectResponse;
+use App\Http\Resources\UserResource;
 
 class AuthController extends Controller
 {
@@ -82,68 +83,66 @@ class AuthController extends Controller
         return view("auth.login");
     }
 
-    // =================================
-    // 會員登入
-    public function login()
-    {
-        return view("auth.login");
-    }
 
-    public function loginPost(Request $request)
+    // 登入邏輯
+    public function login(array $credentials)
     {
-        // 登入驗證
-        $request->validate([
-            'email' => 'required|email',
-            'password' => 'required|string',
-        ]);
-        $credentials = $request->only('email', 'password');
 
-        // 登入失敗
-        if (!Auth::attempt($credentials)) {
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => '帳號或密碼錯誤，請重新輸入。'
-                ], Response::HTTP_BAD_REQUEST);
-            }
-            return redirect(route('login'))->with([
-                'error' => '登入失敗，請重新輸入。'
-            ]);
+
+        // 查詢用戶
+        $user = User::where('email', $credentials['email'])->first();
+
+        // 檢查用戶是否存在
+        if (!$user) {
+            return [
+                'status' => 'error',
+                'message' => '請註冊帳號後再行登入',
+                'code' => Response::HTTP_UNAUTHORIZED
+            ];
         }
 
-        // 登入
-        $user = User::firstWhere('email', $request->email);
+        // 如果用戶存在，檢查是否是第三方登入（沒有密碼的情況）
+        if ($user->provider == Provider::GOOGLE) {
+            return [
+                'status' => 'error',
+                'message' => '請使用 Google 登入',
+                'code' => Response::HTTP_UNAUTHORIZED
+            ];
+        }
+        // 嘗試根據憑證登入
+        $loginSuccess = Auth::attempt($credentials);
+        // 如果是本地用戶，檢查帳號密碼
+        if (!$loginSuccess) {
+            return [
+                'status' => 'error',
+                'message' => '電子郵件或密碼錯誤',
+                'code' => Response::HTTP_UNAUTHORIZED
+            ];
+        }
 
-        // 檢查使用者是否已完成電子郵件驗證
+        // 檢查是否已完成電子郵件驗證
         if (!$user->is_verified) {
-            // 若未驗證，提示用戶完成驗證後再登入
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => '請完成電子郵件驗證後再登入。',
-                ], Response::HTTP_FORBIDDEN);
-            }
-
-            return redirect(route('login'))->with([
-                'error' => '請完成電子郵件驗證後再登入。',
-            ]);
+            return [
+                'status' => 'error',
+                'message' => '請完成電子郵件驗證後再登入。',
+                'code' => Response::HTTP_FORBIDDEN
+            ];
         }
 
-        // 產生 API token
+        // 登入成功，生成 API token
         $token = $user->createToken(
             'API token for ' . $user->name,
             ['*'],
             now()->addMonth() // 一個月後過期
         )->plainTextToken;
 
-        if ($request->expectsJson()) {
-            return response()->json([
-                'status' => 'success',
-                'access_token' => $token,
-                'message' => '成功登入',
-            ], Response::HTTP_OK);
-        }
-        return redirect()->intended(route('theards.index'));
+        return [
+            'status' => 'success',
+            'access_token' => $token,
+            'user' => $user,
+            'message' => '成功登入',
+            'code' => Response::HTTP_OK
+        ];
     }
     // 會員編輯
     public function edit(Request $request)
