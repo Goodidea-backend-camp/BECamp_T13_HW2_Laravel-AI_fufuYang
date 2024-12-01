@@ -15,6 +15,8 @@ use Illuminate\Contracts\View\View;
 use App\Http\Requests\RegisterRequest;
 use Illuminate\Http\RedirectResponse;
 use App\Http\Resources\UserResource;
+use App\Http\Requests\LoginRequest;
+use Illuminate\Http\JsonResponse;
 
 class AuthController extends Controller
 {
@@ -84,104 +86,62 @@ class AuthController extends Controller
     }
 
 
-    // 登入邏輯
-    public function login(array $credentials)
+    // [登入]==============================================
+    public function loginPost(LoginRequest $request)
     {
+        $credentials = $request->only('email', 'password');
 
+        // 呼叫 AuthService 來處理登入邏輯
+        $response = $this->authService->login($credentials);
 
-        // 查詢用戶
-        $user = User::where('email', $credentials['email'])->first();
-
-        // 檢查用戶是否存在
-        if (!$user) {
-            return [
-                'status' => 'error',
-                'message' => '請註冊帳號後再行登入',
-                'code' => Response::HTTP_UNAUTHORIZED
-            ];
+        // 如果是錯誤回應（未驗證或其他錯誤）
+        if ($response['status'] == 'error') {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'status' => $response['status'],
+                    'message' => $response['message'],
+                    'code' => $response['code']
+                ]);
+            }
+            session()->flash('error', $response['message']);
+            return redirect(route('login'));
         }
 
-        // 如果用戶存在，檢查是否是第三方登入（沒有密碼的情況）
-        if ($user->provider == Provider::GOOGLE) {
-            return [
-                'status' => 'error',
-                'message' => '請使用 Google 登入',
-                'code' => Response::HTTP_UNAUTHORIZED
-            ];
-        }
-        // 嘗試根據憑證登入
-        $loginSuccess = Auth::attempt($credentials);
-        // 如果是本地用戶，檢查帳號密碼
-        if (!$loginSuccess) {
-            return [
-                'status' => 'error',
-                'message' => '電子郵件或密碼錯誤',
-                'code' => Response::HTTP_UNAUTHORIZED
-            ];
-        }
-
-        // 檢查是否已完成電子郵件驗證
-        if (!$user->is_verified) {
-            return [
-                'status' => 'error',
-                'message' => '請完成電子郵件驗證後再登入。',
-                'code' => Response::HTTP_FORBIDDEN
-            ];
-        }
-
-        // 登入成功，生成 API token
-        $token = $user->createToken(
-            'API token for ' . $user->name,
-            ['*'],
-            now()->addMonth() // 一個月後過期
-        )->plainTextToken;
-
-        return [
-            'status' => 'success',
-            'access_token' => $token,
-            'user' => $user,
-            'message' => '成功登入',
-            'code' => Response::HTTP_OK
-        ];
-    }
-    // 會員編輯
-    public function edit(Request $request)
-    {
-        // 取得當前登入的使用者
-        $user = Auth::user();
-
-        // 顯示會員編輯頁面，並傳遞使用者資料
-        return view('auth.edit', compact('user'));
-    }
-
-
-    // 會員資料更新
-    public function update(Request $request)
-    {
-        // 驗證資料，僅允許更新 name 和 introduction
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'introduction' => 'nullable|string',
-        ]);
-
-        // 取得當前登入的使用者
-        $user = Auth::user();
-
-        // 更新 name 和 introduction
-
-        $user->name = $request->input('name');
-        $user->introduction = $request->input('introduction');
-        $user->save();
-
-        // 回傳更新成功的訊息
+        // 如果是成功登入，返回 API token
         if ($request->expectsJson()) {
             return response()->json([
-                'status' => 'success',
-                'message' => '會員資料更新成功',
-            ], Response::HTTP_OK);
+                'status' => $response['status'],
+                'access_token' => $response['access_token'],
+                'message' => $response['message'],
+            ], $response['code']);
         }
 
-        return redirect()->route('profile.edit')->with('success', '會員資料更新成功');
+        // 登入成功後，重定向到其他頁面
+        return redirect()->route('theards.index');
+    }
+
+
+    // [更新會員資料]==============================================
+    public function update(Request $request): Response|View|JsonResponse
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'introduction' => 'nullable|string|max:255',
+        ]);
+
+        // 確保使用者已登錄
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
+
+        // 呼叫 AuthService 更新用戶資料
+        $updatedUser = $this->authService->updateUser($user, $request);
+        if ($request->expectsJson()) {
+            return $this->success(new UserResource($updatedUser), '資料更新成功');
+        }
+        return view('auth.edit', compact('user'));
     }
     // =================================
     // 會員登出

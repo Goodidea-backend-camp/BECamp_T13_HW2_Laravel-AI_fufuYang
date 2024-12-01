@@ -167,4 +167,16 @@ class AuthService
             'code' => Response::HTTP_OK
         ];
     }
+
+    // 更新用戶資料
+    public function updateUser(Authenticatable $user, Request $request)
+    {
+        if ($user instanceof User) {
+            $user->name = $request->input('name');
+            $user->introduction = $request->input('introduction');
+            $user->save();
+        }
+
+        return $user;
+    }
 }
