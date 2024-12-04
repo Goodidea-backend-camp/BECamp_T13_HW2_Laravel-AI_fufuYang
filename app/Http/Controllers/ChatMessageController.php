@@ -91,7 +91,21 @@ class ChatMessageController extends Controller
     }
 
 
+    /**
+     * 取得特定訊息的詳細資訊
+     *
+     * @param int $threadId 討論串的 ID
+     * @param int $id 訊息的 ID
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function show(int $threadId, int $id): \Illuminate\Http\JsonResponse
+    {
+        $message = $this->getMessageById($threadId, $id);
 
+        return response()->json([
+            'message' => $message
+        ]);
+    }
     /**
      * 處理語音回應生成
      *
@@ -151,5 +165,19 @@ class ChatMessageController extends Controller
             ->orderBy('created_at', 'desc')
             ->take(10)
             ->get();
+    }
+
+
+    /**
+     * 取得特定討論串中的訊息，通過訊息 ID 查詢
+     *
+     * @param int $threadId 討論串的 ID
+     * @param int $id 訊息的 ID
+     * @return ChatMessage
+     */
+    private function getMessageById(int $threadId, int $id): ChatMessage
+    {
+        $thread = Thread::findOrFail($threadId);
+        return $thread->chatMessages()->findOrFail($id);
     }
 }
