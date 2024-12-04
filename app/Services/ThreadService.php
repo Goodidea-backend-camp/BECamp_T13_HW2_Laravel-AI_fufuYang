@@ -51,8 +51,6 @@ class ThreadService
         return Thread::findOrFail($id);
     }
 
-
-
     /**
      * 更新指定 ID 的討論串
      *
@@ -86,5 +84,17 @@ class ThreadService
             'message' => '名稱更新成功',
             'code' => Response::HTTP_OK
         ];
+    }
+
+    /**
+     * 刪除指定 ID 的討論串
+     *
+     * @param int $id
+     * @return void
+     */
+    public function deleteThread($id)
+    {
+        $thread = Thread::findOrFail($id);
+        $thread->delete();
     }
 }

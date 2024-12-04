@@ -76,7 +76,6 @@ class ThreadController extends Controller
         return $this->success(new ThreadResource($thread));
     }
 
-
     /**
      * 更新指定 ID 的討論串
      *
@@ -111,5 +110,18 @@ class ThreadController extends Controller
                 'message' => $response['message'],
             ], $response['code']);
         }
+    }
+
+    /**
+     * 刪除指定 ID 的討論串
+     *
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function destroy($id)
+    {
+        $thread = $this->threadService->getThreadById($id);
+        $this->threadService->deleteThread($id);
+        return $this->success(null, 'Thread 已刪除');
     }
 }
