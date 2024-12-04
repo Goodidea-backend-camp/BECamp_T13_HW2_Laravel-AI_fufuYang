@@ -39,4 +39,15 @@ class ThreadService
         $thread->save();
         return $thread;
     }
+
+    /**
+     * 根據 ID 獲取指定的討論串
+     *
+     * @param int $id
+     * @return Thread
+     */
+    public function getThreadById($id)
+    {
+        return Thread::findOrFail($id);
+    }
 }

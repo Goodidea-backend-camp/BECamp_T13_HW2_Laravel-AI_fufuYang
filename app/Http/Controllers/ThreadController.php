@@ -63,4 +63,16 @@ class ThreadController extends Controller
         $thread = $this->threadService->createThread($request->validated());
         return $this->success(new ThreadResource($thread), 'Thread 創建成功');
     }
+
+    /**
+     * 顯示指定 ID 的討論串
+     *
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function show($id)
+    {
+        $thread = $this->threadService->getThreadById($id);
+        return $this->success(new ThreadResource($thread));
+    }
 }
