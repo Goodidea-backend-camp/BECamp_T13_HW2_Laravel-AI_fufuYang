@@ -75,4 +75,41 @@ class ThreadController extends Controller
         $thread = $this->threadService->getThreadById($id);
         return $this->success(new ThreadResource($thread));
     }
+
+
+    /**
+     * 更新指定 ID 的討論串
+     *
+     * @param ThreadRequest $request
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     * @return mixed
+     */
+    public function update(ThreadRequest $request, $id)
+    {
+        $request->only(['title', 'type']);
+        $response = $this->threadService->updateThread($id, $request->validated());
+
+        // 如果更新過程中有錯誤，處理錯誤回應
+        if ($response['status'] == 'error') {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'status' => $response['status'],
+                    'message' => $response['message'],
+                    'code' => $response['code']
+                ]);
+            }
+            session()->flash('error', $response['message']);
+            return redirect(route('login'));
+        }
+
+        // 更新成功，返回成功訊息
+        if ($request->expectsJson()) {
+            return response()->json([
+                'status' => $response['status'],
+                'thread' => $response['thread'],
+                'message' => $response['message'],
+            ], $response['code']);
+        }
+    }
 }

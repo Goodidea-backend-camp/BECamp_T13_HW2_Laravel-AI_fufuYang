@@ -50,4 +50,41 @@ class ThreadService
     {
         return Thread::findOrFail($id);
     }
+
+
+
+    /**
+     * 更新指定 ID 的討論串
+     *
+     * @param int $id
+     * @param array $data
+     * @return array
+     */
+    public function updateThread($id, array $data)
+    {
+        $thread = Thread::find($id);
+
+        if (!$thread) {
+            return [
+                'status' => 'error',
+                'message' => '找不到可以更新的項目',
+                'code' => Response::HTTP_NOT_FOUND
+            ];
+        }
+        $thread->title = $data['title'];
+
+        // 如果沒有傳遞 `type`，設置預設值為 Chat 類型
+        if (!isset($data['type'])) {
+            $data['type'] = ThreadType::Chat;
+        }
+
+        $thread->save();
+
+        return [
+            'status' => 'success',
+            'thread' => $thread,
+            'message' => '名稱更新成功',
+            'code' => Response::HTTP_OK
+        ];
+    }
 }
