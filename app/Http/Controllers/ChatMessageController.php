@@ -131,6 +131,23 @@ class ChatMessageController extends Controller
     }
 
     /**
+     * 刪除特定訊息
+     *
+     * @param int $threadId 討論串的 ID
+     * @param int $id 訊息的 ID
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function destroy(int $threadId, int $id): \Illuminate\Http\JsonResponse
+    {
+        $message = $this->getMessageById($threadId, $id);
+        $message->delete();
+
+        return response()->json([
+            'message' => '訊息已刪除'
+        ]);
+    }
+
+    /**
      * 處理語音回應生成
      *
      * @param string $openAiResponse OpenAI 回應的文字內容
