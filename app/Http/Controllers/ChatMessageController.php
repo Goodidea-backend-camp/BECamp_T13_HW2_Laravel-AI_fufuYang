@@ -90,7 +90,6 @@ class ChatMessageController extends Controller
         ]);
     }
 
-
     /**
      * 取得特定訊息的詳細資訊
      *
@@ -106,6 +105,31 @@ class ChatMessageController extends Controller
             'message' => $message
         ]);
     }
+
+    /**
+     * 更新特定訊息的內容
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param int $threadId 討論串的 ID
+     * @param int $id 訊息的 ID
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function update(Request $request, int $threadId, int $id): \Illuminate\Http\JsonResponse
+    {
+        $request->validate([
+            'content' => 'required|string|max:5000',
+        ]);
+
+        $message = $this->getMessageById($threadId, $id);
+        $message->content = $request->content;
+        $message->save();
+
+        return response()->json([
+            'message' => '訊息已更新',
+            'data' => $message
+        ]);
+    }
+
     /**
      * 處理語音回應生成
      *
@@ -166,7 +190,6 @@ class ChatMessageController extends Controller
             ->take(10)
             ->get();
     }
-
 
     /**
      * 取得特定討論串中的訊息，通過訊息 ID 查詢
