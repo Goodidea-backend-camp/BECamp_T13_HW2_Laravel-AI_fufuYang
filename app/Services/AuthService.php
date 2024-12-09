@@ -2,22 +2,21 @@
 
 namespace App\Services;
 
-use App\Models\User;
-use App\Enums\Provider;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Mail;
-use App\Mail\VerificationEmail;
-use Laravel\Socialite\Facades\Socialite;
 use App\AI\Assistant;
-use Symfony\Component\HttpFoundation\Response;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Session;
+use App\Enums\Provider;
+use App\Mail\VerificationEmail;
+use App\Models\User;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Str;
+use Laravel\Socialite\Facades\Socialite;
+use Symfony\Component\HttpFoundation\Response;
 
 class AuthService
 {
-
     // 註冊邏輯
     public function register(array $data)
     {
@@ -26,7 +25,7 @@ class AuthService
         if ($existingUser) {
             // 檢查是否為第三方登入
             if ($existingUser->password == null) {
-                return  ['email_error' => '請直接使用 Google 登入', 'status' => Response::HTTP_CONFLICT]; // 如果是第三方登入，提示使用 Google 登入
+                return ['email_error' => '請直接使用 Google 登入', 'status' => Response::HTTP_CONFLICT]; // 如果是第三方登入，提示使用 Google 登入
             }
 
             return ['name_error' => '電子郵件已被使用，請選擇其他電子郵件地址', 'status' => Response::HTTP_CONFLICT];  // 如果是本地註冊用戶，提示更換郵件地址
@@ -36,10 +35,9 @@ class AuthService
         $assistant = new Assistant();
         $nameCheck = $assistant->checkNameValidity($data['name']); // 檢查名稱
 
-        if (!$nameCheck['is_valid']) {
+        if (! $nameCheck['is_valid']) {
             return ['name_error' => '使用者名稱違反公共道德，請更改', Response::HTTP_UNPROCESSABLE_ENTITY]; // 使用者名稱不合法
         }
-
 
         // 註冊新用戶
         $user = new User();
@@ -67,6 +65,7 @@ class AuthService
 
         return $user;
     }
+
     // Google 登入邏輯
     public function handleGoogleLogin()
     {
@@ -106,21 +105,19 @@ class AuthService
         return $user;
     }
 
-
     // 登入邏輯
     public function login(array $credentials)
     {
-
 
         // 查詢用戶
         $user = User::where('email', $credentials['email'])->first();
 
         // 檢查用戶是否存在
-        if (!$user) {
+        if (! $user) {
             return [
                 'status' => 'error',
                 'message' => '請註冊帳號後再行登入',
-                'code' => Response::HTTP_UNAUTHORIZED
+                'code' => Response::HTTP_UNAUTHORIZED,
             ];
         }
 
@@ -129,32 +126,32 @@ class AuthService
             return [
                 'status' => 'error',
                 'message' => '請使用 Google 登入',
-                'code' => Response::HTTP_UNAUTHORIZED
+                'code' => Response::HTTP_UNAUTHORIZED,
             ];
         }
         // 嘗試根據憑證登入
         $loginSuccess = Auth::attempt($credentials);
         // 如果是本地用戶，檢查帳號密碼
-        if (!$loginSuccess) {
+        if (! $loginSuccess) {
             return [
                 'status' => 'error',
                 'message' => '電子郵件或密碼錯誤',
-                'code' => Response::HTTP_UNAUTHORIZED
+                'code' => Response::HTTP_UNAUTHORIZED,
             ];
         }
 
         // 檢查是否已完成電子郵件驗證
-        if (!$user->is_verified) {
+        if (! $user->is_verified) {
             return [
                 'status' => 'error',
                 'message' => '請完成電子郵件驗證後再登入。',
-                'code' => Response::HTTP_FORBIDDEN
+                'code' => Response::HTTP_FORBIDDEN,
             ];
         }
 
         // 登入成功，生成 API token
         $token = $user->createToken(
-            'API token for ' . $user->name,
+            'API token for '.$user->name,
             ['*'],
             now()->addMonth() // 一個月後過期
         )->plainTextToken;
@@ -164,7 +161,7 @@ class AuthService
             'access_token' => $token,
             'user' => $user,
             'message' => '成功登入',
-            'code' => Response::HTTP_OK
+            'code' => Response::HTTP_OK,
         ];
     }
 
@@ -179,6 +176,7 @@ class AuthService
 
         return $user;
     }
+
     // 會員登出邏輯
     public function logout(Request $request)
     {

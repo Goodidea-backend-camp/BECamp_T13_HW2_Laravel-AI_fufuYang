@@ -17,9 +17,6 @@ class ThreadController extends Controller
     /** @var ThreadService */
     protected $threadService;
 
-    /**
-     * @param ThreadService $threadService
-     */
     public function __construct(ThreadService $threadService)
     {
         $this->threadService = $threadService;
@@ -33,13 +30,13 @@ class ThreadController extends Controller
     public function index()
     {
         $threads = $this->threadService->getAllThreads();
+
         return $this->success(ThreadResource::collection($threads));
     }
 
     /**
      * 儲存一個新創建的討論串
      *
-     * @param ThreadRequest $request
      * @return \Illuminate\Http\JsonResponse
      */
     public function store(ThreadRequest $request)
@@ -54,33 +51,34 @@ class ThreadController extends Controller
             if ($activeThreadsCount >= 3) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => $activeThreadsCount . '免費會員最多只能創建 3 個討論串。',
+                    'message' => $activeThreadsCount.'免費會員最多只能創建 3 個討論串。',
                 ], 400);
             }
         }
 
         // 創建新的討論串
         $thread = $this->threadService->createThread($request->validated());
+
         return $this->success(new ThreadResource($thread), 'Thread 創建成功');
     }
 
     /**
      * 顯示指定 ID 的討論串
      *
-     * @param int $id
+     * @param  int  $id
      * @return \Illuminate\Http\JsonResponse
      */
     public function show($id)
     {
         $thread = $this->threadService->getThreadById($id);
+
         return $this->success(new ThreadResource($thread));
     }
 
     /**
      * 更新指定 ID 的討論串
      *
-     * @param ThreadRequest $request
-     * @param int $id
+     * @param  int  $id
      * @return \Illuminate\Http\JsonResponse
      * @return mixed
      */
@@ -95,10 +93,11 @@ class ThreadController extends Controller
                 return response()->json([
                     'status' => $response['status'],
                     'message' => $response['message'],
-                    'code' => $response['code']
+                    'code' => $response['code'],
                 ]);
             }
             session()->flash('error', $response['message']);
+
             return redirect(route('login'));
         }
 
@@ -115,13 +114,14 @@ class ThreadController extends Controller
     /**
      * 刪除指定 ID 的討論串
      *
-     * @param int $id
+     * @param  int  $id
      * @return \Illuminate\Http\JsonResponse
      */
     public function destroy($id)
     {
         $thread = $this->threadService->getThreadById($id);
         $this->threadService->deleteThread($id);
+
         return $this->success(null, 'Thread 已刪除');
     }
 }

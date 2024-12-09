@@ -23,6 +23,7 @@ class ChatMessage extends Model
     {
         return $this->hasOne(VoiceMessage::class);
     }
+
     // 讓 Eloquent 使用 enum 來處理 'role' 欄位
     protected $casts = [
         'role' => MessageRole::class,  // 使用 Enum 類型

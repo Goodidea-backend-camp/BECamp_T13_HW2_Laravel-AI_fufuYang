@@ -1,22 +1,22 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\VerificationController;
-use App\Http\Controllers\ThreadController;
 use App\Http\Controllers\ChatMessageController;
 use App\Http\Controllers\ImageMessageController;
+use App\Http\Controllers\ThreadController;
+use App\Http\Controllers\VerificationController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum'); // 需要認證才能存取
 
 // 認證路由
-Route::get('/login', [AuthController::class, "login"])->name("login"); // 顯示登入頁面
-Route::post('/login', [AuthController::class, "loginPost"])->name("login.post"); // 處理登入表單
-Route::get('/register', [AuthController::class, "register"])->name("register"); // 顯示註冊頁面
-Route::post('/register', [AuthController::class, "registerPost"])->name("register.post"); // 處理註冊表單
+Route::get('/login', [AuthController::class, 'login'])->name('login'); // 顯示登入頁面
+Route::post('/login', [AuthController::class, 'loginPost'])->name('login.post'); // 處理登入表單
+Route::get('/register', [AuthController::class, 'register'])->name('register'); // 顯示註冊頁面
+Route::post('/register', [AuthController::class, 'registerPost'])->name('register.post'); // 處理註冊表單
 Route::get('/verify/{token}', [VerificationController::class, 'verify'])->name('verification.verify'); // 使用者驗證
 
 // Google 登入路由

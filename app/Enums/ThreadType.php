@@ -14,5 +14,6 @@ use BenSampo\Enum\Enum;
 final class ThreadType extends Enum
 {
     const Chat = 1;
+
     const Image = 2;
 }

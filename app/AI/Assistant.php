@@ -8,7 +8,6 @@ class Assistant
 {
     public OpenAI\Client $client;
 
-
     public function __construct(protected array $messages = [])
     {
         $this->client = OpenAI::client(config('services.openai.api_key'));
@@ -104,6 +103,7 @@ class Assistant
             'model' => 'omni-moderation-latest', // 使用的模型
             'input' => $name, // 檢查的名稱
         ]);
+
         // 返回檢查結果，包括名稱是否有效和詳細信息
         return [
             'is_valid' => $response->results[0]->flagged === false, // 如果 flagged 為 false，表示名稱是有效的

@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\AI\Assistant;
-use App\Enums\MessageRole;
 use App\Enums\SubscriptionType;
 use App\Models\ImageMessage;
 use App\Models\Thread;
@@ -19,8 +18,9 @@ class ImageMessageController extends Controller
     {
         $thread = Thread::findOrFail($threadId);
         $messages = $thread->imageMessages;
+
         return response()->json([
-            'messages' => $messages
+            'messages' => $messages,
         ]);
     }
 
@@ -69,7 +69,7 @@ class ImageMessageController extends Controller
         //返回回應結果
         return response()->json([
             'message' => $activeThreadsCount . '訊息已發送並收到回應',
-            'openai_response' => $image_url // 回傳圖片的 URL
+            'openai_response' => $image_url, // 回傳圖片的 URL
         ]);
     }
 

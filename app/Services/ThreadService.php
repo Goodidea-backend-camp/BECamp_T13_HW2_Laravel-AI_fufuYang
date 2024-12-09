@@ -2,14 +2,13 @@
 
 namespace App\Services;
 
-use App\Models\Thread;
 use App\Enums\ThreadType;
+use App\Models\Thread;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
 class ThreadService
 {
-    public function __construct() {}
 
     /**
      * 獲取所有的討論串
@@ -24,7 +23,6 @@ class ThreadService
     /**
      * 創建新的討論串
      *
-     * @param array $data
      * @return Thread
      */
     public function createThread(array $data)
@@ -37,13 +35,14 @@ class ThreadService
         $thread->type = $type;  // 儲存 Enum 的數字值（1 或 2）
         $thread->user_id = $userId;
         $thread->save();
+
         return $thread;
     }
 
     /**
      * 根據 ID 獲取指定的討論串
      *
-     * @param int $id
+     * @param  int  $id
      * @return Thread
      */
     public function getThreadById($id)
@@ -54,25 +53,24 @@ class ThreadService
     /**
      * 更新指定 ID 的討論串
      *
-     * @param int $id
-     * @param array $data
+     * @param  int  $id
      * @return array
      */
     public function updateThread($id, array $data)
     {
         $thread = Thread::find($id);
 
-        if (!$thread) {
+        if (! $thread) {
             return [
                 'status' => 'error',
                 'message' => '找不到可以更新的項目',
-                'code' => Response::HTTP_NOT_FOUND
+                'code' => Response::HTTP_NOT_FOUND,
             ];
         }
         $thread->title = $data['title'];
 
         // 如果沒有傳遞 `type`，設置預設值為 Chat 類型
-        if (!isset($data['type'])) {
+        if (! isset($data['type'])) {
             $data['type'] = ThreadType::Chat;
         }
 
@@ -82,14 +80,14 @@ class ThreadService
             'status' => 'success',
             'thread' => $thread,
             'message' => '名稱更新成功',
-            'code' => Response::HTTP_OK
+            'code' => Response::HTTP_OK,
         ];
     }
 
     /**
      * 刪除指定 ID 的討論串
      *
-     * @param int $id
+     * @param  int  $id
      * @return void
      */
     public function deleteThread($id)

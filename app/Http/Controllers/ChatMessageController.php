@@ -6,11 +6,10 @@ use App\AI\Assistant;
 use App\Enums\MessageRole;
 use App\Enums\SubscriptionType;
 use App\Models\ChatMessage;
-use App\Models\VoiceMessage;
-use Illuminate\Http\Request;
 use App\Models\Thread;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\VoiceMessage;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class ChatMessageController extends Controller
@@ -18,24 +17,22 @@ class ChatMessageController extends Controller
     /**
      * 取得特定討論串中的所有訊息
      *
-     * @param int $threadId 討論串的 ID
-     * @return \Illuminate\Http\JsonResponse
+     * @param  int  $threadId  討論串的 ID
      */
     public function index(int $threadId): \Illuminate\Http\JsonResponse
     {
         $thread = Thread::findOrFail($threadId);
         $messages = $thread->chatMessages()->get();
+
         return response()->json([
-            'messages' => $messages
+            'messages' => $messages,
         ]);
     }
 
     /**
      * 儲存新訊息並將其發送至 OpenAI 獲取回應
      *
-     * @param \Illuminate\Http\Request $request
-     * @param int $threadId 討論串的 ID
-     * @return \Illuminate\Http\JsonResponse
+     * @param  int  $threadId  討論串的 ID
      */
     public function store(Request $request, int $threadId): \Illuminate\Http\JsonResponse
     {
@@ -54,7 +51,7 @@ class ChatMessageController extends Controller
             if ($activeThreadsCount >= 10) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => $activeThreadsCount . ' 免費會員最多只能創建 10 個聊天訊息。',
+                    'message' => $activeThreadsCount.' 免費會員最多只能創建 10 個聊天訊息。',
                 ], 400);
             }
         }
@@ -74,7 +71,7 @@ class ChatMessageController extends Controller
             return $msg->content;
         })->implode(' ');
 
-        $openAiResponse = $assistant->send($historyMessages . ' ' . $request->content, false);
+        $openAiResponse = $assistant->send($historyMessages.' '.$request->content, false);
 
         // 儲存 OpenAI 的回應訊息
         $this->saveMessage($openAiResponse, MessageRole::Assistant, $thread->id);
@@ -86,33 +83,30 @@ class ChatMessageController extends Controller
 
         return response()->json([
             'message' => '訊息已發送並收到回應，文字回覆',
-            'openai_response' => $openAiResponse
+            'openai_response' => $openAiResponse,
         ]);
     }
 
     /**
      * 取得特定訊息的詳細資訊
      *
-     * @param int $threadId 討論串的 ID
-     * @param int $id 訊息的 ID
-     * @return \Illuminate\Http\JsonResponse
+     * @param  int  $threadId  討論串的 ID
+     * @param  int  $id  訊息的 ID
      */
     public function show(int $threadId, int $id): \Illuminate\Http\JsonResponse
     {
         $message = $this->getMessageById($threadId, $id);
 
         return response()->json([
-            'message' => $message
+            'message' => $message,
         ]);
     }
 
     /**
      * 更新特定訊息的內容
      *
-     * @param \Illuminate\Http\Request $request
-     * @param int $threadId 討論串的 ID
-     * @param int $id 訊息的 ID
-     * @return \Illuminate\Http\JsonResponse
+     * @param  int  $threadId  討論串的 ID
+     * @param  int  $id  訊息的 ID
      */
     public function update(Request $request, int $threadId, int $id): \Illuminate\Http\JsonResponse
     {
@@ -126,16 +120,15 @@ class ChatMessageController extends Controller
 
         return response()->json([
             'message' => '訊息已更新',
-            'data' => $message
+            'data' => $message,
         ]);
     }
 
     /**
      * 刪除特定訊息
      *
-     * @param int $threadId 討論串的 ID
-     * @param int $id 訊息的 ID
-     * @return \Illuminate\Http\JsonResponse
+     * @param  int  $threadId  討論串的 ID
+     * @param  int  $id  訊息的 ID
      */
     public function destroy(int $threadId, int $id): \Illuminate\Http\JsonResponse
     {
@@ -143,22 +136,21 @@ class ChatMessageController extends Controller
         $message->delete();
 
         return response()->json([
-            'message' => '訊息已刪除'
+            'message' => '訊息已刪除',
         ]);
     }
 
     /**
      * 處理語音回應生成
      *
-     * @param string $openAiResponse OpenAI 回應的文字內容
-     * @param \App\Models\Thread $thread 討論串實例
-     * @return \Illuminate\Http\JsonResponse
+     * @param  string  $openAiResponse  OpenAI 回應的文字內容
+     * @param  \App\Models\Thread  $thread  討論串實例
      */
     private function handleVoiceResponse(string $openAiResponse, Thread $thread): \Illuminate\Http\JsonResponse
     {
         $assistant = new Assistant();
         $audioResponse = $assistant->speech($openAiResponse);
-        $audioFilePath = 'audio_files/' . uniqid('audio_') . '.mp3';
+        $audioFilePath = 'audio_files/'.uniqid('audio_').'.mp3';
 
         Storage::disk('public')->put($audioFilePath, $audioResponse);
         $audioUrl = Storage::url($audioFilePath);
@@ -178,10 +170,9 @@ class ChatMessageController extends Controller
     /**
      * 儲存訊息到資料庫
      *
-     * @param string $content 訊息內容
-     * @param string $role 訊息的角色（用戶或助手）
-     * @param int $threadId 訊息所屬的討論串 ID
-     * @return ChatMessage
+     * @param  string  $content  訊息內容
+     * @param  string  $role  訊息的角色（用戶或助手）
+     * @param  int  $threadId  訊息所屬的討論串 ID
      */
     private function saveMessage(string $content, string $role, int $threadId): ChatMessage
     {
@@ -197,7 +188,7 @@ class ChatMessageController extends Controller
     /**
      * 取得特定討論串中的訊息，並按創建時間排序
      *
-     * @param int $threadId 討論串的 ID
+     * @param  int  $threadId  討論串的 ID
      * @return \App\Models\ChatMessage[]
      */
     private function getMessagesForThread(int $threadId): \Illuminate\Database\Eloquent\Collection
@@ -211,13 +202,13 @@ class ChatMessageController extends Controller
     /**
      * 取得特定討論串中的訊息，通過訊息 ID 查詢
      *
-     * @param int $threadId 討論串的 ID
-     * @param int $id 訊息的 ID
-     * @return ChatMessage
+     * @param  int  $threadId  討論串的 ID
+     * @param  int  $id  訊息的 ID
      */
     private function getMessageById(int $threadId, int $id): ChatMessage
     {
         $thread = Thread::findOrFail($threadId);
+
         return $thread->chatMessages()->findOrFail($id);
     }
 }

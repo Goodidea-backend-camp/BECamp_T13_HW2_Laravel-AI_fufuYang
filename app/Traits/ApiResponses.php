@@ -10,7 +10,7 @@ trait ApiResponses
         return response()->json([
             'data' => $data,
             'message' => $message,
-            'status' => $statusCode
+            'status' => $statusCode,
         ], $statusCode);
     }
 
@@ -20,12 +20,12 @@ trait ApiResponses
         if (is_string($errors)) {
             return response()->json([
                 'message' => $errors,
-                'status' => $statusCode
+                'status' => $statusCode,
             ], $statusCode);
         }
 
         return response()->json([
-            'errors' => $errors
+            'errors' => $errors,
         ], $statusCode);
     }
 

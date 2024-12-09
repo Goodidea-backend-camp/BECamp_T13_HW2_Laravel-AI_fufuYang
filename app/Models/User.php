@@ -10,13 +10,11 @@ use Laravel\Sanctum\HasApiTokens;
 /**
  * @property int $subscription_type
  */
-
 class User extends Authenticatable
 {
+    use HasApiTokens;
     use HasFactory;
     use Notifiable;
-    use HasApiTokens;
-
 
     /**
      * The attributes that should be hidden for serialization.
@@ -40,6 +38,7 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
     // 一對多關聯：一個用戶可以有多個討論串（threads）
     public function threads()
     {

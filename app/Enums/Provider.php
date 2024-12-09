@@ -14,5 +14,6 @@ use BenSampo\Enum\Enum;
 final class Provider extends Enum
 {
     const LOCAL = 0;
+
     const GOOGLE = 1;
 }

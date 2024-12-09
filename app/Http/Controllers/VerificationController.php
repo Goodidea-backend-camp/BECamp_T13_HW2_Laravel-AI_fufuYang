@@ -11,7 +11,7 @@ class VerificationController extends Controller
     {
         $user = User::where('verification_token', $token)->first();
 
-        if (!$user) {
+        if (! $user) {
             return redirect(route('login'))->with('error', '無效的驗證令牌。');
         }
 

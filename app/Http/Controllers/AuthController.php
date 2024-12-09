@@ -2,21 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Models\User;
-use App\Enums\Provider;
-use Illuminate\Support\Facades\Auth;
-use Symfony\Component\HttpFoundation\Response;
-use Illuminate\Support\Facades\Session;
-use Laravel\Socialite\Facades\Socialite;
+use App\Http\Requests\LoginRequest;
+use App\Http\Requests\RegisterRequest;
+use App\Http\Resources\UserResource;
 use App\Services\AuthService;
 use App\Traits\ApiResponses;
 use Illuminate\Contracts\View\View;
-use App\Http\Requests\RegisterRequest;
-use Illuminate\Http\RedirectResponse;
-use App\Http\Resources\UserResource;
-use App\Http\Requests\LoginRequest;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Symfony\Component\HttpFoundation\Response;
 
 class AuthController extends Controller
 {
@@ -63,7 +59,6 @@ class AuthController extends Controller
         return redirect()->route('login')->with('status', '註冊成功，請檢查您的電子郵件以驗證帳戶。');
     }
 
-
     // [Google登入]==============================================
     public function googleRedirect(): RedirectResponse
     {
@@ -77,14 +72,14 @@ class AuthController extends Controller
         if ($request->expectsJson()) {
             return new UserResource($user);
         }
+
         return redirect()->intended(route('theards.index'));
     }
 
     public function login()
     {
-        return view("auth.login");
+        return view('auth.login');
     }
-
 
     // [登入]==============================================
     public function loginPost(LoginRequest $request)
@@ -100,10 +95,11 @@ class AuthController extends Controller
                 return response()->json([
                     'status' => $response['status'],
                     'message' => $response['message'],
-                    'code' => $response['code']
+                    'code' => $response['code'],
                 ]);
             }
             session()->flash('error', $response['message']);
+
             return redirect(route('login'));
         }
 
@@ -124,8 +120,10 @@ class AuthController extends Controller
     public function edit(): View
     {
         $user = Auth::user();
+
         return view('auth.edit', compact('user'));
     }
+
     // [更新會員資料]==============================================
     public function update(Request $request): Response|View|JsonResponse
     {
@@ -137,7 +135,7 @@ class AuthController extends Controller
         // 確保使用者已登錄
         $user = Auth::user();
 
-        if (!$user) {
+        if (! $user) {
             return response()->json(['message' => 'Unauthenticated.'], 401);
         }
 
@@ -146,8 +144,10 @@ class AuthController extends Controller
         if ($request->expectsJson()) {
             return $this->success(new UserResource($updatedUser), '資料更新成功');
         }
+
         return view('auth.edit', compact('user'));
     }
+
     // [登出]==============================================
     public function logout(Request $request): Response
     {
