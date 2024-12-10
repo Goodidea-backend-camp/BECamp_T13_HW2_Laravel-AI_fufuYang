@@ -25,7 +25,10 @@ class ChatMessage extends Model
     }
 
     // 讓 Eloquent 使用 enum 來處理 'role' 欄位
-    protected $casts = [
-        'role' => MessageRole::class,  // 使用 Enum 類型
-    ];
+    protected function casts(): array
+    {
+        return [
+            'role' => MessageRole::class // 使用 Enum 類型
+        ];
+    }
 }
