@@ -22,10 +22,8 @@ class ThreadService
 
     /**
      * 創建新的討論串
-     *
-     * @return Thread
      */
-    public function createThread(array $data)
+    public function createThread(array $data): Thread
     {
         $userId = Auth::id();  // 取得當前用戶 ID
         $type = $data['type'] === 'chat' ? ThreadType::Chat : ThreadType::Image;
@@ -43,9 +41,8 @@ class ThreadService
      * 根據 ID 獲取指定的討論串
      *
      * @param  int  $id
-     * @return Thread
      */
-    public function getThreadById($id)
+    public function getThreadById($id): Thread
     {
         return Thread::findOrFail($id);
     }
@@ -54,9 +51,8 @@ class ThreadService
      * 更新指定 ID 的討論串
      *
      * @param  int  $id
-     * @return array
      */
-    public function updateThread($id, array $data)
+    public function updateThread($id, array $data): array
     {
         $thread = Thread::find($id);
 
@@ -67,6 +63,7 @@ class ThreadService
                 'code' => Response::HTTP_NOT_FOUND,
             ];
         }
+
         $thread->title = $data['title'];
 
         // 如果沒有傳遞 `type`，設置預設值為 Chat 類型
@@ -88,9 +85,8 @@ class ThreadService
      * 刪除指定 ID 的討論串
      *
      * @param  int  $id
-     * @return void
      */
-    public function deleteThread($id)
+    public function deleteThread($id): void
     {
         $thread = Thread::findOrFail($id);
         $thread->delete();
