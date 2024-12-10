@@ -76,12 +76,12 @@ class ImageMessageController extends Controller
     public function saveMessage(string $description, string $image_url, int $threadId): ImageMessage
     {
         // 創建並儲存訊息
-        $message = new ImageMessage();
-        $message->description = $description;
-        $message->image_url = $image_url;  // 使用 Assistant 回傳的 image_url
-        $message->thread_id = $threadId;
-        $message->save();
+        $imageMessage = new ImageMessage();
+        $imageMessage->description = $description;
+        $imageMessage->image_url = $image_url;  // 使用 Assistant 回傳的 image_url
+        $imageMessage->thread_id = $threadId;
+        $imageMessage->save();
 
-        return $message;
+        return $imageMessage;
     }
 }
