@@ -51,7 +51,7 @@ class ChatMessageController extends Controller
             if ($activeThreadsCount >= 10) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => $activeThreadsCount.' 免費會員最多只能創建 10 個聊天訊息。',
+                    'message' => $activeThreadsCount . ' 免費會員最多只能創建 10 個聊天訊息。',
                 ], 400);
             }
         }
@@ -71,7 +71,7 @@ class ChatMessageController extends Controller
             return $msg->content;
         })->implode(' ');
 
-        $openAiResponse = $assistant->send($historyMessages.' '.$request->content, false);
+        $openAiResponse = $assistant->send($historyMessages . ' ' . $request->content, false);
 
         // 儲存 OpenAI 的回應訊息
         $this->saveMessage($openAiResponse, MessageRole::Assistant, $thread->id);
@@ -95,10 +95,10 @@ class ChatMessageController extends Controller
      */
     public function show(int $threadId, int $id): \Illuminate\Http\JsonResponse
     {
-        $message = $this->getMessageById($threadId, $id);
+        $chatMessage = $this->getMessageById($threadId, $id);
 
         return response()->json([
-            'message' => $message,
+            'message' => $chatMessage,
         ]);
     }
 
@@ -114,13 +114,13 @@ class ChatMessageController extends Controller
             'content' => 'required|string|max:5000',
         ]);
 
-        $message = $this->getMessageById($threadId, $id);
-        $message->content = $request->content;
-        $message->save();
+        $chatMessage = $this->getMessageById($threadId, $id);
+        $chatMessage->content = $request->content;
+        $chatMessage->save();
 
         return response()->json([
             'message' => '訊息已更新',
-            'data' => $message,
+            'data' => $chatMessage,
         ]);
     }
 
@@ -132,8 +132,8 @@ class ChatMessageController extends Controller
      */
     public function destroy(int $threadId, int $id): \Illuminate\Http\JsonResponse
     {
-        $message = $this->getMessageById($threadId, $id);
-        $message->delete();
+        $chatMessage = $this->getMessageById($threadId, $id);
+        $chatMessage->delete();
 
         return response()->json([
             'message' => '訊息已刪除',
@@ -150,7 +150,7 @@ class ChatMessageController extends Controller
     {
         $assistant = new Assistant();
         $audioResponse = $assistant->speech($openAiResponse);
-        $audioFilePath = 'audio_files/'.uniqid('audio_').'.mp3';
+        $audioFilePath = 'audio_files/' . uniqid('audio_') . '.mp3';
 
         Storage::disk('public')->put($audioFilePath, $audioResponse);
         $audioUrl = Storage::url($audioFilePath);
@@ -176,13 +176,13 @@ class ChatMessageController extends Controller
      */
     private function saveMessage(string $content, string $role, int $threadId): ChatMessage
     {
-        $message = new ChatMessage();
-        $message->content = $content;
-        $message->role = $role;
-        $message->thread_id = $threadId;
-        $message->save();
+        $chatMessage = new ChatMessage();
+        $chatMessage->content = $content;
+        $chatMessage->role = $role;
+        $chatMessage->thread_id = $threadId;
+        $chatMessage->save();
 
-        return $message;
+        return $chatMessage;
     }
 
     /**
