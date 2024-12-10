@@ -18,11 +18,11 @@ use Rector\TypeDeclaration\Rector\Property\TypedPropertyFromStrictConstructorRec
 
 return RectorConfig::configure()
     ->withPaths([
-        __DIR__.'/app',
-        __DIR__.'/bootstrap',
-        __DIR__.'/resources',
-        __DIR__.'/routes',
-        __DIR__.'/tests',
+        __DIR__ . '/app',
+        __DIR__ . '/bootstrap',
+        __DIR__ . '/resources',
+        __DIR__ . '/routes',
+        __DIR__ . '/tests',
     ])
     ->withRules([
         TypedPropertyFromStrictConstructorRector::class,
@@ -51,4 +51,5 @@ return RectorConfig::configure()
         ClosureToArrowFunctionRector::class,
         NullToStrictStringFuncCallArgRector::class,
         StaticArrowFunctionRector::class,
+        __DIR__ . '/routes/api.php',
     ]);
