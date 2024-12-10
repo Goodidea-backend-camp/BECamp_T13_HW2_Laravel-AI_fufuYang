@@ -18,12 +18,7 @@ class AuthController extends Controller
 {
     use ApiResponses;
 
-    protected $authService;
-
-    public function __construct(AuthService $authService)
-    {
-        $this->authService = $authService;
-    }
+    public function __construct(protected AuthService $authService) {}
 
     // [註冊]==============================================
     public function register(): View
@@ -31,14 +26,14 @@ class AuthController extends Controller
         return view('auth.register');
     }
 
-    public function registerPost(RegisterRequest $request)
+    public function registerPost(RegisterRequest $registerRequest)
     {
         // 註冊驗證
-        $result = $this->authService->register($request->validated());
+        $result = $this->authService->register($registerRequest->validated());
 
         // 如果註冊返回錯誤
-        if (isset($request['email_error']) || isset($result['name_error'])) {
-            if ($request->expectsJson()) {
+        if (isset($registerRequest['email_error']) || isset($result['name_error'])) {
+            if ($registerRequest->expectsJson()) {
                 // 若是 JSON 請求，回傳錯誤訊息
                 return $this->error($result['name_error'] ?? $result['email_error'], $result['status'] ?? Response::HTTP_UNPROCESSABLE_ENTITY);
             }
@@ -51,7 +46,7 @@ class AuthController extends Controller
         }
 
         // 註冊成功，回傳成功訊息
-        if ($request->expectsJson()) {
+        if ($registerRequest->expectsJson()) {
             return $this->success(null, '註冊成功，請檢查您的電子郵件以驗證帳戶。');
         }
 
@@ -82,29 +77,30 @@ class AuthController extends Controller
     }
 
     // [登入]==============================================
-    public function loginPost(LoginRequest $request)
+    public function loginPost(LoginRequest $LoginRequest)
     {
-        $credentials = $request->only('email', 'password');
+        $credentials = $LoginRequest->only('email', 'password');
 
         // 呼叫 AuthService 來處理登入邏輯
         $response = $this->authService->login($credentials);
 
         // 如果是錯誤回應（未驗證或其他錯誤）
         if ($response['status'] == 'error') {
-            if ($request->expectsJson()) {
+            if ($LoginRequest->expectsJson()) {
                 return response()->json([
                     'status' => $response['status'],
                     'message' => $response['message'],
                     'code' => $response['code'],
                 ]);
             }
+
             session()->flash('error', $response['message']);
 
             return redirect(route('login'));
         }
 
         // 如果是成功登入，返回 API token
-        if ($request->expectsJson()) {
+        if ($LoginRequest->expectsJson()) {
             return response()->json([
                 'status' => $response['status'],
                 'access_token' => $response['access_token'],
@@ -121,7 +117,7 @@ class AuthController extends Controller
     {
         $user = Auth::user();
 
-        return view('auth.edit', compact('user'));
+        return view('auth.edit', ['user' => $user]);
     }
 
     // [更新會員資料]==============================================
@@ -140,12 +136,12 @@ class AuthController extends Controller
         }
 
         // 呼叫 AuthService 更新用戶資料
-        $updatedUser = $this->authService->updateUser($user, $request);
+        $authenticatable = $this->authService->updateUser($user, $request);
         if ($request->expectsJson()) {
-            return $this->success(new UserResource($updatedUser), '資料更新成功');
+            return $this->success(new UserResource($authenticatable), '資料更新成功');
         }
 
-        return view('auth.edit', compact('user'));
+        return view('auth.edit', ['user' => $user]);
     }
 
     // [登出]==============================================
