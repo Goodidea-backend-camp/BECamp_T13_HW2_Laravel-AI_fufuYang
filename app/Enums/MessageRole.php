@@ -13,7 +13,7 @@ use BenSampo\Enum\Enum;
  */
 final class MessageRole extends Enum
 {
-    const User = 1;
+    public const User = 1;
 
-    const Assistant = 2;
+    public const Assistant = 2;
 }
