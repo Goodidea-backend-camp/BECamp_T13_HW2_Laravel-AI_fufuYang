@@ -18,7 +18,7 @@ use Symfony\Component\HttpFoundation\Response;
 class AuthService
 {
     // 註冊邏輯
-    public function register(array $data)
+    public function register(array $data): array|User
     {
         // 檢查是否已存在相同 email 的用戶
         $existingUser = User::where('email', $data['email'])->first();
@@ -106,7 +106,7 @@ class AuthService
     }
 
     // 登入邏輯
-    public function login(array $credentials)
+    public function login(array $credentials): array
     {
 
         // 查詢用戶
@@ -129,6 +129,7 @@ class AuthService
                 'code' => Response::HTTP_UNAUTHORIZED,
             ];
         }
+
         // 嘗試根據憑證登入
         $loginSuccess = Auth::attempt($credentials);
         // 如果是本地用戶，檢查帳號密碼
@@ -151,7 +152,7 @@ class AuthService
 
         // 登入成功，生成 API token
         $token = $user->createToken(
-            'API token for '.$user->name,
+            'API token for ' . $user->name,
             ['*'],
             now()->addMonth() // 一個月後過期
         )->plainTextToken;
@@ -166,19 +167,19 @@ class AuthService
     }
 
     // 更新用戶資料
-    public function updateUser(Authenticatable $user, Request $request)
+    public function updateUser(Authenticatable $authenticatable, Request $request): Authenticatable
     {
-        if ($user instanceof User) {
-            $user->name = $request->input('name');
-            $user->introduction = $request->input('introduction');
-            $user->save();
+        if ($authenticatable instanceof User) {
+            $authenticatable->name = $request->input('name');
+            $authenticatable->introduction = $request->input('introduction');
+            $authenticatable->save();
         }
 
-        return $user;
+        return $authenticatable;
     }
 
     // 會員登出邏輯
-    public function logout(Request $request)
+    public function logout(Request $request): void
     {
         // 清除 Sanctum 的 token
         $request->user()->tokens->each(function ($token) {
