@@ -1,10 +1,26 @@
+<div align="center">
+
 # Laravel OpenAI
 
-## Introduction
+![Ubuntu Badge](https://img.shields.io/badge/Ubuntu-E95420?style=for-the-badge&logo=ubuntu&logoColor=white) 
+![PHP Badge](https://img.shields.io/badge/PHP-777BB4?style=for-the-badge&logo=php&logoColor=white) 
+![Laravel Badge](https://img.shields.io/badge/Laravel-FF2D20?style=for-the-badge&logo=laravel&logoColor=white) 
+![MySQL Badge](https://img.shields.io/badge/MySQL-005C84?style=for-the-badge&logo=mysql&logoColor=white) 
+![Postman Badge](https://img.shields.io/badge/Postman-FF6C37?style=for-the-badge&logo=Postman&logoColor=white) 
+![Git Badge](https://img.shields.io/badge/GIT-E44C30?style=for-the-badge&logo=git&logoColor=white) 
+![GitHub Badge](https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white)
 
-## Prerequisites
+</div>
 
-## Installation (Author: [Helen](https://github.com/lovepp0518))
+## 專案簡介
+此專案是使用 **Laravel** 框架開發的應用程式，整合了 **MySQL** 資料庫與 **OpenAI API**，並使用 **Postman** 進行測試。
+使用者須先註冊後，可使用 AI 進行聊天，並生成相對應的圖片。
+
+## 資料表
+![資料表圖片](https://github.com/Goodidea-backend-camp/BECamp_T13_HW2_Laravel-AI_fufuYang/blob/development/public/images/%E8%B3%87%E6%96%99%E8%A1%A8.png)
+
+
+## 安裝與設定
 
 1. 若未下載 Docker Desktop 或是 [OrbStack](https://orbstack.dev/)（建議）者，需先下載。
 
@@ -36,13 +52,5 @@ composer install
 ```
 
 
-## 作業目標
-
-## Usage
-- 請 Fork 一份到 `Goodidea-backend-camp` 這個 Organization，名稱取叫 `BECamp_T13_HW2_Laravel-AI_{Your Name}`，例如 `BECamp_T13_HW2_Laravel-AI_JYu`。
-- 根據每個功能開 branch，發 PR 到自己的 main 分支。
-- 發 PR 前請先確認 CI 流程有通過。
-- 主專案不定時會進行調整，請盡量保持與主專案最新狀態。
-- 本專案有使用 [Laravel Sail](https://laravel.com/docs/11.x/sail)，自己斟酌要不要使用。
-
-## Working Flow
+## 專案功能
+![功能圖](https://github.com/Goodidea-backend-camp/BECamp_T13_HW2_Laravel-AI_fufuYang/blob/development/public/images/Ai-chat-chat.png)
