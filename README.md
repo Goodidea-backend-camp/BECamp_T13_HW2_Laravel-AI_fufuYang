@@ -16,6 +16,9 @@
 此專案是使用 **Laravel** 框架開發的應用程式，整合了 **MySQL** 資料庫與 **OpenAI API**，並使用 **Postman** 進行測試。
 使用者須先註冊後，可使用 AI 進行聊天，並生成相對應的圖片。
 
+## Demo
+https://github.com/user-attachments/assets/796fd3e3-471a-4a48-b630-cbcde8852aed
+
 ## 資料表
 ![資料表圖片](https://github.com/Goodidea-backend-camp/BECamp_T13_HW2_Laravel-AI_fufuYang/blob/development/public/images/%E8%B3%87%E6%96%99%E8%A1%A8.png)
 
@@ -54,3 +57,8 @@ composer install
 
 ## 專案功能
 ![功能圖](https://github.com/Goodidea-backend-camp/BECamp_T13_HW2_Laravel-AI_fufuYang/blob/development/public/images/Ai-chat-chat.png)
+
+
+
+
+
